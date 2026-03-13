@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Robot 3D Render</title>
+    <!-- 1. Vi laddar biblioteket först av allt -->
+    <script src="https://unpkg.com"></script>
+    <link href="https://unpkg.com" rel="stylesheet" />
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        .ui {
+            position: absolute; top: 10px; left: 10px; z-index: 10;
+            background: white; padding: 15px; border-radius: 8px;
+            font-family: sans-serif; box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        button { cursor: pointer; background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="ui">
+    <strong>3D Terräng-render</strong><br>
+    <span id="pos">Redo att starta</span><br><br>
+    <button id="startBtn">Starta simulering</button>
+</div>
+<div id="map"></div>
+
+<script>
+    // Din lista med koordinater (testar i ett område med lite höjdskillnad)
+    const route = [
+        [18.513, 67.903], [18.518, 67.905], [18.525, 67.908],
+        [18.535, 67.912], [18.545, 67.915], [18.555, 67.918]
+    ];
+
+    // Skapa kartan
+    const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://demotiles.maplibre.org', 
+        center: route[0],
+        zoom: 13,
+        pitch: 60
+    });
+
+    const marker = new maplibregl.Marker({ color: 'red' })
+        .setLngLat(route[0])
+        .addTo(map);
+
+    // Aktivera 3D-terräng
+    map.on('load', () => {
+        map.addSource('terrain', {
+            type: 'raster-dem',
+            url: 'https://demotiles.maplibre.org',
+            tileSize: 256
+        });
+        map.setTerrain({ source: 'terrain', exaggeration: 1.5 });
+    });
+
+    let step = 0;
+    function run() {
+        if (step < route.length) {
+            const coords = route[step];
+            marker.setLngLat(coords);
+            map.easeTo({ center: coords, duration: 1000 });
+            document.getElementById('pos').innerText = `Punkt: ${step + 1} / ${route.length}`;
+            step++;
+            setTimeout(run, 2000);
+        }
+    }
+
+    // Koppla knappen säkert
+    document.getElementById('startBtn').addEventListener('click', run);
+
+</script>
+</body>
+</html>
